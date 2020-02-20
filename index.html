@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<title>Coco Character Shops</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+<body>
+    <div class="w3-bar w3-border w3-round w3-light-grey">
+        <a href="index.html" class="w3-bar-item w3-button">Home</a>
+        <a class="w3-right w3-bar-item yourAccount"></a>
+      </div>
+    <br>
+
+    
+    <div class="w3-container w3-center">
+        <h2>Coco Character Shops</h2>
+        <div class="w3-panel w3-border alertBox">
+            <h3 class="hTitle">Success!</h3>
+            <p class="alertBox-text">alert</p>
+        </div>
+    </div>
+    <hr>
+        <span class="w3-margin-left">Available character</span>
+    <hr>
+    <div class="w3-row-padding sellPage">
+        
+    </div>
+
+    <hr>
+    <span class="w3-margin-left">Unavailable character (Have owner)</span>
+    <hr>
+
+    <div class="w3-row-padding ownedPage">
+
+
+    </div>
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+    $(".alertBox").hide();
+    if (typeof web3 !== 'undefined') {
+        // this statement is executed if you are using 
+        // MetaMask 
+        async function enableAccounts() {
+            await ethereum.enable()
+        }
+        enableAccounts();
+    } else {
+        // set the provider you want from Web3.providers
+        web3 = new Web3(
+            new Web3.providers.HttpProvider(
+                "http://localhost:8545"));
+    }
+
+
+    let abiShop = [
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "reason",
+				"type": "string"
+			}
+		],
+		"name": "PurchaseCharacterErrorLog",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "buyer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "SoldCharacter",
+		"type": "event"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "priceTag",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "imagePath",
+				"type": "string"
+			}
+		],
+		"name": "addCharacter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getAllCharacter",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "Id",
+				"type": "uint256"
+			}
+		],
+		"name": "getChracterById",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getNextValId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			}
+		],
+		"name": "sellCharacter",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "function"
+	}
+];
+    var initShopContract = web3.eth.contract(abiShop);
+    var shopContract = initShopContract.at('0xa6ed14b48f9A16B273CF6BDdD40c6af57dA7b7c9');
+
+
+    $(document).ready(function () {
+        web3.eth.getAccounts(function (error, result) {
+            $(".yourAccount").html("Your account is <b>"+result+"</b>");
+        });
+        getList();
+    });
+
+
+    var soldCharacterEvent = 
+            shopContract.SoldCharacter();
+
+            soldCharacterEvent.watch(function(error, result) {
+            if (!error){
+               if (result.args.buyer == web3.eth.defaultAccount){
+                    $('.hTitle').text("Purchase success!");
+                    $('.alertBox-text').text("Thank you for purchase our character.");
+                    $('.alertBox').addClass("w3-pale-green");
+                    $(".alertBox").show().delay(5000).queue(function (n) {
+                        $(this).hide(); n();});          
+                }
+            }
+        });
+
+    var purchaseCharacterErrorLog = 
+            shopContract.PurchaseCharacterErrorLog();
+
+            purchaseCharacterErrorLog.watch(function(error, result) {
+            if (!error){
+               if (result.args.buyer == web3.eth.defaultAccount){
+                    $('.hTitle').text("Error!");
+                    $('.alertBox-text').text(result.args.reason);
+                    $('.alertBox').addClass("w3-red");
+                    $(".alertBox").show().delay(5000).queue(function (n) {
+                        $(this).hide(); n();});               
+                }
+            }
+    });
+    
+
+    function purchaseCharacter(id, price_tag) {
+        shopContract.sellCharacter(id,{
+              gas: 300000,
+              from: web3.eth.accounts[0],
+              value: price_tag
+            },
+            (error, result) => {
+                $('.hTitle').text("Pending!");
+                $('.alertBox-text').text("Wait for confirmation!!!!");
+                $('.alertBox').addClass("w3-khaki");
+                $(".alertBox").show().delay(5000).queue(function (n) {
+                    $(this).hide(); n();
+                });
+            });
+    }
+
+
+    function getList(){
+        shopContract.getAllCharacter(function (error, result) {
+            for (var i in result) {
+                shopContract.getChracterById(i,
+                    (error, result) => {
+                        console.log(result);
+                        if (!error) {
+                            var initHtml = '<div class="w3-third w3-margin-bottom">' +
+                                '<ul class="w3-ul w3-border w3-center w3-hover-shadow">' +
+                                '<li class="w3-green w3-xlarge w3-padding-32"> ID: ' + result[0] + '</li>' +
+                                '<li class="w3-padding-16"><b>Character Name</b> ' + result[1] + '</li>' +
+                                '<li class="w3-padding-16">' +
+                                '<img src="'+result[4]+'" style="width:50%">';
+                            
+                            if(!result[5]){
+                                initHtml+= '<h2 class="w3-wide"> ' + web3.fromWei(parseInt(result[2].toString()), 'ether') + ' ETH</h2>' +
+                                        '</li>' +
+                                        ' <li class="w3-light-grey w3-padding-24">' +
+                                        '<button onclick="purchaseCharacter(' + result[0]+ ',' + result[2] + ')" class="w3-button w3-green w3-padding-large">Buy</button>' +
+                                        '</li>' +
+                                        '</ul>' +
+                                        '</div>';
+                                $(".sellPage").append(initHtml);
+
+                            }
+                            else{
+                                initHtml+= '</li>' +
+                                        ' <li class="w3-light-grey w3-padding">' +
+                                        'Owner is '+result[3].substring(0, 15)+"..."
+                                        '</li>' +
+                                        '</ul>' +
+                                        '</div>';
+                                $(".ownedPage").append(initHtml);
+                            }
+
+                        } else
+                            console.error(error);
+                    });
+                console.log(i);
+            }
+
+        });
+    }
+
+</script>
+
+</html>
