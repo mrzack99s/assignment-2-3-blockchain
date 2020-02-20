@@ -223,7 +223,7 @@
 	}
 ];
     var initShopContract = web3.eth.contract(abiShop);
-    var shopContract = initShopContract.at('0xa6ed14b48f9A16B273CF6BDdD40c6af57dA7b7c9');
+    var shopContract = initShopContract.at('0x4c40A2eFd1D12633B0405626cbe6D81fB6543262');
 
 
     $(document).ready(function () {
@@ -294,7 +294,7 @@
                                 '<li class="w3-green w3-xlarge w3-padding-32"> ID: ' + result[0] + '</li>' +
                                 '<li class="w3-padding-16"><b>Character Name</b> ' + result[1] + '</li>' +
                                 '<li class="w3-padding-16">' +
-                                '<img src="'+result[4]+'" style="width:50%">';
+                                '<img src="'+result[4]+'" style="width:33.33%">';
                             
                             if(!result[5]){
                                 initHtml+= '<h2 class="w3-wide"> ' + web3.fromWei(parseInt(result[2].toString()), 'ether') + ' ETH</h2>' +
