@@ -30,7 +30,7 @@ contract COCOCharacterShop {
     }
     
     function sellCharacter(uint id) public payable returns(bool){
-        if(msg.value < cocoCharacter[id].priceTag){
+        if(msg.value != cocoCharacter[id].priceTag){
             emit PurchaseCharacterErrorLog(msg.sender,"Error, invalid value !!");
             msg.sender.transfer(msg.value);
             return false;
